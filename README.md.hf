@@ -1,0 +1,14 @@
+# 🏥 生产级 RAG 知识库问答系统
+
+基于 **LangChain + FAISS + BM25 混合检索 + BGE-Rerank** 的企业知识库问答系统（HRP 医院运营示例语料）。
+支持流式问答、来源引用、三种检索模式对比（vector / hybrid / hybrid_rerank）。
+
+- 演示页：打开本 Space 根路径即可提问
+- API 文档：`/docs`（Swagger）
+- 检索接口：`POST /retrieve`，示例：
+  ```json
+  {"query": "什么是SPD模式？", "mode": "hybrid_rerank", "top_k": 2}
+  ```
+
+> 说明：CPU 免费实例即可运行；首次请求会自动加载 BGE 向量/重排模型（约 1-2 分钟）。
+> 完整源码与离线评估指标（Hit@5 92.9%→100%、MRR +12.4%）：见 GitHub 仓库。

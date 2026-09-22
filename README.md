@@ -23,6 +23,29 @@
 
 > 结果文件：`eval_data/eval_result.json`（可复现：`python -m scripts.evaluate 5`）
 
+## 上线部署（两条路径，任选其一）
+
+### 路径 A：Docker Compose 一键部署（本机 / 任何云服务器）
+
+```bash
+docker compose up -d          # 构建并启动（首次约 5-10 分钟）
+# 浏览器打开 http://localhost:8000 即见演示页；/docs 为 API 文档
+# 可选：cp .env.example .env 填入 LLM Key 开启完整问答
+./deploy.sh                   # 或一键部署 + 健康自检
+```
+
+云服务器部署后把 `localhost` 换成服务器公网 IP 即可对外访问（记得在安全组放行 8000 端口）。
+
+### 路径 B：HuggingFace Spaces 免费公网托管（简历可直接放链接）
+
+1. 登录 [huggingface.co](https://huggingface.co) → **New Space**；
+2. SDK 选择 **Docker**，填好名称（如 `rag-knowledge-base`）；
+3. 把本目录文件上传（**Dockerfile 需重命名为 `Dockerfile.hf`**，或在 Space 的 Files 里把 `Dockerfile.hf` 的内容粘到根目录 `Dockerfile`）；
+4. 点 **Create** 等待构建完成（CPU 免费实例即可，首次请求自动加载模型约 1-2 分钟）；
+5. 完成后得到公网地址：`https://<你的用户名>-rag-knowledge-base.hf.space`，**可直接放进简历**。
+
+> 提示：Space 免费 CPU 实例 16GB 内存足够；把模型缓存挂到 Space 的持久存储可避免每次重启重新下载。
+
 ## 架构
 
 ```

@@ -35,5 +35,6 @@ LLM_MODEL = os.getenv("LLM_MODEL", "deepseek-chat")
 LLM_TEMPERATURE = 0.3
 
 # ---------- 服务 ----------
-SERVE_HOST = "0.0.0.0"
-SERVE_PORT = 8000
+SERVE_HOST = os.getenv("HOST", "0.0.0.0")
+# 端口支持环境变量覆盖：HuggingFace Spaces 要求监听 7860，本地默认 8000
+SERVE_PORT = int(os.getenv("PORT", "8000"))

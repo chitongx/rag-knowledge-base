@@ -1,0 +1,26 @@
+# HuggingFace Spaces (Docker SDK) 专用镜像
+# 与主 Dockerfile 的区别：监听 7860 端口（Spaces 强制要求）、以 CPU 推理为目标。
+# 部署步骤见 README.md「上线部署」章节。
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/app/.hf \
+    PORT=7860
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src ./src
+COPY scripts ./scripts
+COPY data ./data
+COPY eval_data ./eval_data
+
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 7860
+
+CMD ["python", "-m", "scripts.serve"]
