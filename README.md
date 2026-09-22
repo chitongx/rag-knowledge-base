@@ -36,23 +36,23 @@ docker compose up -d          # 构建并启动（首次约 5-10 分钟）
 
 云服务器部署后把 `localhost` 换成服务器公网 IP 即可对外访问（记得在安全组放行 8000 端口）。
 
-### 路径 B：HuggingFace Spaces 免费公网托管（简历可直接放链接）
+### 路径 B：Streamlit Community Cloud 免费公网托管（简历可直接放链接）
 
-1. 登录 [huggingface.co](https://huggingface.co) → **New Space**；
-2. SDK 选择 **Docker**，填好名称（如 `rag-knowledge-base`）；
-3. 把本目录文件上传（**Dockerfile 需重命名为 `Dockerfile.hf`**，或在 Space 的 Files 里把 `Dockerfile.hf` 的内容粘到根目录 `Dockerfile`）；
-4. 点 **Create** 等待构建完成（CPU 免费实例即可，首次请求自动加载模型约 1-2 分钟）；
-5. 完成后得到公网地址：`https://<你的用户名>-rag-knowledge-base.hf.space`，**可直接放进简历**。
+> 说明：HuggingFace Spaces 的 Docker/Gradio 托管 2026 年起需 PRO 订阅，**免费公网推荐 Streamlit Community Cloud**（真免费、无需信用卡）。
 
-> 提示：Space 免费 CPU 实例 16GB 内存足够；把模型缓存挂到 Space 的持久存储可避免每次重启重新下载。
+1. 本仓库已含 `streamlit_app.py`（与 FastAPI 共用同一检索管线）与 `requirements.txt`；
+2. 打开 [streamlit.io/cloud](https://streamlit.io/cloud) → **用 GitHub 登录** → **Create app**；
+3. 选择本仓库（`chitongx/rag-knowledge-base`）→ Branch `main` → Main file `streamlit_app.py` → **Deploy**；
+4. 约 3-5 分钟构建完成，得到公网地址：`https://rag-knowledge-base.streamlit.app`，**可直接放进简历**。
+
+> 提示：免费实例首次请求会加载模型（1-2 分钟）；约 12 小时无访问会休眠，重新打开等待约 30 秒自动唤醒。
 
 ## 公网安全（部署前必读）
 
-**风险确认**：本项目公网部署的暴露面 = 只读检索接口 + 浏览器演示页 + 示例语料（均为公开示例数据，不含真实企业数据），无写操作、无用户可控外呼（LLM 仅指向部署者配置的固定 API），**示例语料下整体风险低**。但公网/简历上线前请执行：
+**风险确认**：本项目公网部署的暴露面 = 只读检索接口 + 演示页 + 示例语料（均为公开示例数据，不含真实企业数据），无写操作、无用户可控外呼（LLM 仅指向部署者配置的固定 API），**示例语料下整体风险低**。但公网/简历上线前请执行：
 
-1. **开启 API Key 鉴权**（推荐）：Space Settings → Variables 添加 `API_KEY=<随机密钥>`（`openssl rand -hex 16` 生成）。
-   开启后 `/retrieve` `/chat` 接口需携带 `Authorization: Bearer <key>`（或 `X-API-Key`），演示页右上角输入框可自动附带；未带 Key 返回 401；
-2. **不传真实企业数据**：`data/docs/` 为公开示例语料；替换真实文档前请自行脱敏；LLM Key 一律放 **Space Secrets**，不要写进代码/镜像；
+1. **不传真实企业数据**：`data/docs/` 为公开示例语料；替换真实文档前请自行脱敏；
+2. **LLM Key 一律放平台 Secrets**（Streamlit：Settings → Secrets；HF Spaces：Settings → Variables），不要写进代码/镜像；
 3. **保持接口只读**：本项目无写入/删除接口；二次开发新增写接口时必须加鉴权与速率限制。
 
 ## 架构

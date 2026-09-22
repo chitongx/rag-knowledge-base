@@ -24,3 +24,6 @@ fastapi
 uvicorn
 sse-starlette
 python-dotenv
+
+# ---- 在线演示（Streamlit Community Cloud）----
+streamlit>=1.40
