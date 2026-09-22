@@ -12,17 +12,31 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from .config import API_KEY
 from .retrieval import retrieve
 from .qa import answer_question, stream_answer
 
 app = FastAPI(title="生产级 RAG 知识库", version="1.0.0")
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+# 公网安全：配置 API_KEY 后，业务接口需携带 Bearer Token（演示页与健康检查除外）
+PUBLIC_PATHS = {"/", "/health", "/docs", "/openapi.json", "/redoc"}
+
+
+@app.middleware("http")
+async def api_key_auth(request, call_next):
+    if API_KEY and request.url.path not in PUBLIC_PATHS and not request.url.path.startswith("/static"):
+        auth = request.headers.get("authorization", "")
+        expected = f"Bearer {API_KEY}"
+        if auth != expected and request.headers.get("x-api-key") != API_KEY:
+            return JSONResponse(status_code=401, content={"detail": "无效或缺失 API Key"})
+    return await call_next(request)
 
 
 class RetrieveReq(BaseModel):

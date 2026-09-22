@@ -38,3 +38,8 @@ LLM_TEMPERATURE = 0.3
 SERVE_HOST = os.getenv("HOST", "0.0.0.0")
 # 端口支持环境变量覆盖：HuggingFace Spaces 要求监听 7860，本地默认 8000
 SERVE_PORT = int(os.getenv("PORT", "8000"))
+
+# ---------- 安全（公网部署建议开启） ----------
+# 设置 API_KEY 后，/retrieve /chat 等业务接口需携带 Authorization: Bearer <key>；
+# 留空则开放访问（适合本地演示）。演示页支持在页面右上角填入 Key。
+API_KEY = os.getenv("API_KEY", "")
