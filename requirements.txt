@@ -1,0 +1,26 @@
+# 生产级 RAG 知识库 - 依赖清单
+# Python 3.10+
+# 安装：pip install -r requirements.txt
+
+# ---- 核心框架 ----
+langchain>=0.3
+langchain-community
+langchain-huggingface
+langchain-openai
+
+# ---- 检索与向量 ----
+faiss-cpu
+rank-bm25
+jieba
+pypdf
+python-docx
+
+# ---- 向量模型 / 重排序（含 torch，体积较大） ----
+sentence-transformers
+FlagEmbedding
+
+# ---- Web 服务 ----
+fastapi
+uvicorn
+sse-starlette
+python-dotenv

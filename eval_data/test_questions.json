@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "description": "HRP 知识库检索评估测试集（chunk 级判定）。每个问题标注 expected_key（期望命中的原文关键词/短句，子串匹配）与 expected_sources（期望来源文档）。命中判定：chunk 文本包含 expected_key 即相关。",
+    "source": "基于 data/docs 八份示例文档人工构造，混合专有名词类、语义类、模糊表述类问题"
+  },
+  "questions": [
+    {"question": "什么是HRP系统？", "expected_key": "HRP（Hospital Resource Planning", "expected_sources": ["01_HRP系统概述.md"]},
+    {"question": "HRP和HIS有什么区别？", "expected_key": "HIS（Hospital Information System）主要面向临床诊疗", "expected_sources": ["01_HRP系统概述.md"]},
+    {"question": "HRP覆盖哪些业务域？", "expected_key": "财务管理、物资管理、资产管理、人力资源", "expected_sources": ["01_HRP系统概述.md"]},
+    {"question": "SPD是什么模式？", "expected_key": "SPD（Supply, Processing, Distribution", "expected_sources": ["02_医院物资管理流程.md"]},
+    {"question": "耗材是怎么直接送到科室的？", "expected_key": "按科室消耗定期补货", "expected_sources": ["02_医院物资管理流程.md"]},
+    {"question": "医院物资管理的五个环节是什么？", "expected_key": "需求计划、采购订单、到货验收、入库上架、领用出库", "expected_sources": ["02_医院物资管理流程.md"]},
+    {"question": "什么是VMI？", "expected_key": "VMI（Vendor Managed Inventory", "expected_sources": ["05_供应商与采购管理.md"]},
+    {"question": "供应商资质过期会怎么样？", "expected_key": "资质到期前系统自动预警", "expected_sources": ["05_供应商与采购管理.md"]},
+    {"question": "医院采购有哪几种方式？", "expected_key": "公开招标、邀请招标、竞争性磋商", "expected_sources": ["05_供应商与采购管理.md"]},
+    {"question": "科室成本核算分哪几步？", "expected_key": "直接成本归集、间接成本分摊、成本汇总", "expected_sources": ["03_成本核算规则.md"]},
+    {"question": "间接成本怎么分到科室？", "expected_key": "按一定的分摊参数分摊到临床医技科室", "expected_sources": ["03_成本核算规则.md"]},
+    {"question": "病种成本核算的背景是什么？", "expected_key": "DRG/DIP 支付改革背景下", "expected_sources": ["03_成本核算规则.md"]},
+    {"question": "科室用钱超过预算了怎么办？", "expected_key": "系统自动阻断或进入特批流程", "expected_sources": ["04_预算管理.md"]},
+    {"question": "预算编制的方法有哪些？", "expected_key": "增量预算法、零基预算法、弹性预算法", "expected_sources": ["04_预算管理.md"]},
+    {"question": "三单匹配是哪三单？", "expected_key": "采购订单、入库单、发票", "expected_sources": ["06_财务对账与结算.md"]},
+    {"question": "网上报销流程是怎样的？", "expected_key": "发票验真、预算检查、标准校验", "expected_sources": ["06_财务对账与结算.md"]},
+    {"question": "高值耗材怎么管理？", "expected_key": "一物一码", "expected_sources": ["02_医院物资管理流程.md"]},
+    {"question": "付款排程是怎么生成的？", "expected_key": "根据账期、资金计划与供应商优先级", "expected_sources": ["06_财务对账与结算.md"]},
+    {"question": "RBRVS是什么绩效模式？", "expected_key": "RBRVS（以资源为基础的相对价值比率）", "expected_sources": ["07_绩效管理.md"]},
+    {"question": "绩效奖金是怎么算出来的？", "expected_key": "采集工作量数据", "expected_sources": ["07_绩效管理.md"]},
+    {"question": "DRG/DIP模式下的绩效怎么算？", "expected_key": "绩效与病组权重、结余留用挂钩", "expected_sources": ["07_绩效管理.md"]},
+    {"question": "大型医疗设备怎么计提折旧？", "expected_key": "工作量法按工作量或使用小时数计提", "expected_sources": ["08_资产与设备管理.md"]},
+    {"question": "固定资产全生命周期包括哪些环节？", "expected_key": "购置-验收-建档-使用-维修-盘点-处置", "expected_sources": ["08_资产与设备管理.md"]},
+    {"question": "怎么评估一台设备值不值？", "expected_key": "单台设备效益分析", "expected_sources": ["08_资产与设备管理.md"]},
+    {"question": "医院的钱和物资是怎么统一管理的？", "expected_key": "业务-财务一体化", "expected_sources": ["01_HRP系统概述.md"]},
+    {"question": "科室绩效怎么分到个人？", "expected_key": "二次分配", "expected_sources": ["07_绩效管理.md"]},
+    {"question": "药品和耗材入库要核对什么？", "expected_key": "品名、规格、数量、批号与效期", "expected_sources": ["02_医院物资管理流程.md"]},
+    {"question": "设备折旧影响成本吗？", "expected_key": "折旧计入科室成本", "expected_sources": ["08_资产与设备管理.md"]}
+  ]
+}
