@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRP 知识库问答 · RAG 演示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: #f5f7fa; color: #1f2937; min-height: 100vh; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
+  header h1 { font-size: 22px; font-weight: 600; }
+  header p { color: #6b7280; font-size: 13px; margin-top: 6px; line-height: 1.6; }
+  .card { background: #fff; border-radius: 12px; padding: 20px; margin-top: 20px;
+          box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { background: #eef2ff; color: #4338ca; border: none; border-radius: 999px;
+          padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  .chip:hover { background: #e0e7ff; }
+  .row { display: flex; gap: 8px; margin-top: 14px; }
+  input[type=text] { flex: 1; padding: 10px 14px; border: 1px solid #d1d5db;
+          border-radius: 8px; font-size: 14px; outline: none; }
+  input[type=text]:focus { border-color: #6366f1; }
+  select { padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 13px; }
+  button { background: #4338ca; color: #fff; border: none; border-radius: 8px;
+           padding: 10px 18px; font-size: 14px; cursor: pointer; }
+  button:hover { background: #3730a3; }
+  button:disabled { background: #a5b4fc; cursor: not-allowed; }
+  .meta { font-size: 12px; color: #6b7280; margin-top: 10px; }
+  #answer { min-height: 80px; line-height: 1.8; font-size: 14px; white-space: pre-wrap;
+            word-break: break-word; }
+  .caret { display: inline-block; width: 2px; height: 16px; background: #6366f1;
+           vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .src { border-top: 1px dashed #e5e7eb; margin-top: 16px; padding-top: 12px; }
+  .src h4 { font-size: 13px; color: #374151; margin-bottom: 8px; }
+  .src-item { font-size: 12px; color: #6b7280; background: #f9fafb; border-radius: 6px;
+              padding: 6px 10px; margin-bottom: 6px; }
+  .src-item b { color: #4338ca; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>HRP 医院运营知识库问答</h1>
+    <p>生产级 RAG 演示：LangChain + FAISS + BM25 混合检索 + BGE-Rerank 精排，回答附来源引用。<br>
+       切换检索模式可对比效果：<b>hybrid_rerank</b>（默认，推荐）/ hybrid / vector。</p>
+  </header>
+
+  <div class="card">
+    <div class="chips" id="chips">
+      <button class="chip">什么是HRP系统？</button>
+      <button class="chip">SPD是什么模式？有什么优势？</button>
+      <button class="chip">什么是三单匹配？</button>
+      <button class="chip">RBRVS是什么绩效模式？</button>
+      <button class="chip">预算控制怎么做？</button>
+    </div>
+    <div class="row">
+      <input type="text" id="q" placeholder="输入问题，例如：什么是VMI？" />
+      <select id="mode">
+        <option value="hybrid_rerank">hybrid_rerank</option>
+        <option value="hybrid">hybrid</option>
+        <option value="vector">vector</option>
+      </select>
+      <button id="btn" onclick="ask()">提问</button>
+    </div>
+    <div id="answer" class="meta" style="margin-top:18px; color:#1f2937;"></div>
+    <div class="src" id="srcs" style="display:none;">
+      <h4>引用来源</h4>
+      <div id="srcList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const answerEl = document.getElementById('answer');
+const srcsEl = document.getElementById('srcs');
+const srcListEl = document.getElementById('srcList');
+
+document.getElementById('chips').addEventListener('click', e => {
+  if (e.target.classList.contains('chip')) {
+    document.getElementById('q').value = e.target.textContent;
+  }
+});
+document.getElementById('q').addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+
+async function ask() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  answerEl.innerHTML = '';
+  srcsEl.style.display = 'none';
+  srcListEl.innerHTML = '';
+
+  try {
+    const res = await fetch('/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: q, mode: document.getElementById('mode').value })
+    });
+    if (!res.ok || !res.body) throw new Error('请求失败');
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let caret = document.createElement('span');
+    caret.className = 'caret';
+    answerEl.appendChild(caret);
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop() || '';
+      for (const part of parts) {
+        if (!part.startsWith('data: ')) continue;
+        let evt;
+        try { evt = JSON.parse(part.slice(6)); } catch { continue; }
+        if (evt.type === 'sources') renderSources(evt.data);
+        else if (evt.type === 'token') {
+          caret.remove();
+          answerEl.insertAdjacentText('beforeend', evt.data);
+          answerEl.appendChild(caret);
+          answerEl.scrollTop = answerEl.scrollHeight;
+        }
+      }
+    }
+    caret.remove();
+  } catch (err) {
+    answerEl.textContent = '调用失败：' + err.message + '（LLM 未配置时，请用下方 /retrieve 接口演示检索）';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderSources(list) {
+  if (!list || !list.length) return;
+  srcsEl.style.display = 'block';
+  srcListEl.innerHTML = list.map(s =>
+    `<div class="src-item">#${s.rank} <b>${s.source}</b>${s.heading ? ' · ' + s.heading : ''}</div>`
+  ).join('');
+}
+</script>
+</body>
+</html>

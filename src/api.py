@@ -1,6 +1,7 @@
-"""FastAPI 演示服务：检索 + 问答（SSE 流式）。
+"""FastAPI 演示服务：检索 + 问答（SSE 流式）+ 浏览器演示页。
 
 接口：
+- GET  /                 浏览器演示页（推荐直接打开）
 - GET  /health
 - POST /retrieve    {query, mode, top_k} -> 检索结果（带来源引用）
 - POST /chat        {query, mode}       -> 完整回答（sources + answer）
@@ -9,15 +10,19 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .retrieval import retrieve
 from .qa import answer_question, stream_answer
 
 app = FastAPI(title="生产级 RAG 知识库", version="1.0.0")
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
 class RetrieveReq(BaseModel):
@@ -29,6 +34,11 @@ class RetrieveReq(BaseModel):
 class ChatReq(BaseModel):
     query: str
     mode: str = "hybrid_rerank"
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
 
 
 @app.get("/health")
@@ -57,3 +67,6 @@ def api_chat_stream(req: ChatReq):
         for event in stream_answer(req.query, mode=req.mode):
             yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
