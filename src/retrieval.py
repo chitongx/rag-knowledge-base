@@ -27,8 +27,15 @@ class RetrievedDoc:
 
 
 def load_index() -> tuple[FAISSVectorStore, BM25Index]:
-    store = FAISSVectorStore.load(INDEX_DIR / "faiss")
-    bm25 = BM25Index.load(INDEX_DIR / "bm25")
+    faiss_path = INDEX_DIR / "faiss"
+    bm25_path = INDEX_DIR / "bm25"
+    # 云端（Streamlit Cloud）无持久磁盘，索引二进制不入库；启动时检测到缺失则自动从 data/docs 重建
+    if not (faiss_path / "index.bin").exists() or not (bm25_path / "bm25.pkl").exists():
+        print("[auto-build] 索引不存在，开始从 data/docs/ 自动重建（首次会下载 embedding 模型）...")
+        from scripts.build_index import main as build_main
+        build_main()
+    store = FAISSVectorStore.load(faiss_path)
+    bm25 = BM25Index.load(bm25_path)
     return store, bm25
 
 
