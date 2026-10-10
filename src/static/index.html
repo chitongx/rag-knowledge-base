@@ -43,11 +43,11 @@
 <div class="wrap">
   <header>
     <h1>HRP 医院运营知识库问答</h1>
-    <p>生产级 RAG 演示：LangChain + FAISS + BM25 混合检索 + BGE-Rerank 精排，回答附来源引用。<br>
+    <p>HRP RAG 演示：LangChain + FAISS + BM25 混合检索 + BGE-Rerank 精排，回答附来源引用。<br>
        切换检索模式可对比效果：<b>hybrid_rerank</b>（默认，推荐）/ hybrid / vector。</p>
     <p style="margin-top:8px;"><input type="password" id="apiKey" placeholder="API Key（可选，公网部署开启鉴权时填写）"
         style="max-width:280px;padding:6px 10px;font-size:12px;border:1px solid #d1d5db;border-radius:6px;" />
-      <span style="font-size:11px;color:#9ca3af;">自动保存在本浏览器</span></p>
+      <span style="font-size:11px;color:#9ca3af;">仅在本次页面中使用，不保存</span></p>
   </header>
 
   <div class="card">
@@ -80,10 +80,9 @@ const answerEl = document.getElementById('answer');
 const srcsEl = document.getElementById('srcs');
 const srcListEl = document.getElementById('srcList');
 
-// API Key（可选）：记忆在本浏览器，请求时自动附带 Authorization 头
+// API Key（可选）：仅在当前输入框中保留，请求时附带 Authorization 头。
 const keyInput = document.getElementById('apiKey');
-keyInput.value = localStorage.getItem('rag_api_key') || '';
-keyInput.addEventListener('change', () => localStorage.setItem('rag_api_key', keyInput.value.trim()));
+localStorage.removeItem('rag_api_key');
 
 function authHeaders(extra = {}) {
   const k = keyInput.value.trim();

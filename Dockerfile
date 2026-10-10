@@ -21,7 +21,7 @@ COPY data ./data
 COPY eval_data ./eval_data
 
 # 非 root 运行（安全加固）
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+RUN useradd -m -u 1000 appuser && mkdir -p /app/.hf && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
