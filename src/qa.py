@@ -68,9 +68,11 @@ def answer_question(query: str, mode: str = "hybrid_rerank",
     }
 
 
-def stream_answer(query: str, mode: str = "hybrid_rerank", top_k: int = 5):
+def stream_answer(query: str, mode: str = "hybrid_rerank", top_k: int = 5,
+                  *, docs: list[RetrievedDoc] | None = None):
     """SSE 流式版本：先 yield 引用来源，再逐 token 流式输出答案。"""
-    docs = retrieve(query, mode=mode, top_k=top_k)
+    if docs is None:
+        docs = retrieve(query, mode=mode, top_k=top_k)
     if not docs:
         yield {"type": "sources", "data": []}
         yield {"type": "token", "data": "未检索到相关资料。"}
