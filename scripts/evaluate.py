@@ -3,6 +3,7 @@
 用法：
   python -m scripts.evaluate            # top-k=5
   python -m scripts.evaluate 10         # top-k=10
+  python -m scripts.evaluate 5 --questions eval_data/test_questions_v2.json --output eval_data/eval_result_v2.json
 """
 import sys
 from pathlib import Path

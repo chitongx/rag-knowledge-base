@@ -1,0 +1,981 @@
+{
+  "version": "hrp-retrieval-v2",
+  "created_on": "2026-10-16",
+  "provenance": {
+    "author": "项目作者与 Codex 协作编写",
+    "source": "原始8篇仓库示例资料保持原文；新增4篇作者编写的HRP演示规则，非真实医院制度。",
+    "question_design": "48个新的可回答表述，覆盖原始和扩展资料；另12个无答案或越界问题。题目和资料由同一项目协作编写，非第三方盲测。",
+    "independent_third_party": false,
+    "retrieval_tuned_on_questions": false,
+    "training_use": "本题集用于评估，不作为当前LoRA训练数据；题目已公开，后续实验须记录是否发生数据接触。"
+  },
+  "corpus": {
+    "original": [
+      "01_HRP系统概述.md",
+      "02_医院物资管理流程.md",
+      "03_成本核算规则.md",
+      "04_预算管理.md",
+      "05_供应商与采购管理.md",
+      "06_财务对账与结算.md",
+      "07_绩效管理.md",
+      "08_资产与设备管理.md"
+    ],
+    "extension": [
+      "09_主数据治理_演示规则.md",
+      "10_采购退货_演示规则.md",
+      "11_月结异常_演示规则.md",
+      "12_权限审计_演示规则.md"
+    ]
+  },
+  "historical_reference": {
+    "description": "原28题和结果作为历史快照不覆盖；新题没有复用旧题的完整问题文本。",
+    "sha256": {
+      "eval_data/test_questions.json": "19f468b9149300688ed43186ecc0b43bb1eac44127670055c987f4d805d5e47b",
+      "eval_data/eval_result.json": "b485d37f6a872453794a3669290e6a0897e0986dd62198c67445705cae9e791a",
+      "data/docs/01_HRP系统概述.md": "bed3bae6bcc53a0054dd8737ad57fa27e6efd5907da47376c1d74685e52af086",
+      "data/docs/02_医院物资管理流程.md": "25486de24b0b2357e695067c4e1302906fe22b67c29cb055272a772595f5c740",
+      "data/docs/03_成本核算规则.md": "820f9fa1f06296e3c1494869e845cec74e564335ca412c1ffe765b1fb3adc205",
+      "data/docs/04_预算管理.md": "e82103ff81b8d47213ccba29cae484c87ee3e6218d6cdae7e5b75b0f5c91af73",
+      "data/docs/05_供应商与采购管理.md": "e5ad5eacde037cdcbf3be9510b7a0c980cf31b17604fe97ff351f349499d7128",
+      "data/docs/06_财务对账与结算.md": "a04f945db1b400f29915e3e5cdb1abd234ac6eee64429be5c7335410f460ee14",
+      "data/docs/07_绩效管理.md": "e6c24ff648a595335cd07157421da213e5a1400ac21cb5b3887ecefa6721e7f8",
+      "data/docs/08_资产与设备管理.md": "5ac6cc4c86abbe13d5b5471f31c4e574846509d04c2c11d4b2b6ff99f03469bf"
+    }
+  },
+  "questions": [
+    {
+      "id": "v2-a01",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "HRP把哪四类资源放在同一平台管理？",
+      "expected_sources": [
+        "01_HRP系统概述.md"
+      ],
+      "expected_key": "将医院的人、财、物、信息四大资源统一纳入一体化管理",
+      "answer_points": [
+        "人",
+        "财",
+        "物",
+        "信息"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a02",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "临床诊疗平台与医院运营平台分别围绕什么中心开展业务？",
+      "expected_sources": [
+        "01_HRP系统概述.md"
+      ],
+      "expected_key": "以患者为中心；HRP 则面向医院管理运营环节",
+      "answer_points": [
+        "HIS",
+        "患者",
+        "HRP",
+        "人财物资源"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a03",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "HRP通过哪两个业务环节的联动提升资金使用效率？",
+      "expected_sources": [
+        "01_HRP系统概述.md"
+      ],
+      "expected_key": "通过预算控制与费用报销联动，提升资金使用效率",
+      "answer_points": [
+        "预算控制",
+        "费用报销"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a04",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "HRP实施上线时，资料列举的主要难点有哪些？",
+      "expected_sources": [
+        "01_HRP系统概述.md"
+      ],
+      "expected_key": "基础数据整理、流程再造与多系统接口联调",
+      "answer_points": [
+        "基础数据整理",
+        "流程再造",
+        "多系统接口联调"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a05",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "低值耗材品种多、单价低，管理重点应放在哪里？",
+      "expected_sources": [
+        "02_医院物资管理流程.md"
+      ],
+      "expected_key": "重点在于库存控制与领用规范",
+      "answer_points": [
+        "库存控制",
+        "领用规范"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a06",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "供应商把物资送到仓库后，扫码验收应核验哪些信息？",
+      "expected_sources": [
+        "02_医院物资管理流程.md"
+      ],
+      "expected_key": "核对品名、规格、数量、批号与效期",
+      "answer_points": [
+        "品名",
+        "规格",
+        "数量",
+        "批号",
+        "效期"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a07",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "院内物流服务商设立中心库后，依据什么补货并送往哪里？",
+      "expected_sources": [
+        "02_医院物资管理流程.md"
+      ],
+      "expected_key": "按科室消耗定期补货，将物资直接配送到科室消耗点",
+      "answer_points": [
+        "科室消耗",
+        "定期补货",
+        "科室消耗点"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a08",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "近效期物资与已经过期的物资应分别怎样处理？",
+      "expected_sources": [
+        "02_医院物资管理流程.md"
+      ],
+      "expected_key": "近效期物资系统自动预警，过期物资需单独隔离并按规定报损",
+      "answer_points": [
+        "近效期",
+        "预警",
+        "过期",
+        "隔离",
+        "报损"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a09",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "医院成本四级核算从上到下包括哪四个层次？",
+      "expected_sources": [
+        "03_成本核算规则.md"
+      ],
+      "expected_key": "院级成本、科室成本、项目成本、病种成本",
+      "answer_points": [
+        "院级成本",
+        "科室成本",
+        "项目成本",
+        "病种成本"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a10",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "把科室的直接费用和公共费用纳入成本时，需要经过哪三步？",
+      "expected_sources": [
+        "03_成本核算规则.md"
+      ],
+      "expected_key": "直接成本归集、间接成本分摊、成本汇总",
+      "answer_points": [
+        "直接成本归集",
+        "间接成本分摊",
+        "成本汇总"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a11",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "房屋折旧分摊至科室时，资料建议采用什么参数？",
+      "expected_sources": [
+        "03_成本核算规则.md"
+      ],
+      "expected_key": "房屋折旧按面积分摊",
+      "answer_points": [
+        "房屋折旧",
+        "面积"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a12",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "月度科室成本分析可以查看哪些报表或指标？",
+      "expected_sources": [
+        "03_成本核算规则.md"
+      ],
+      "expected_key": "科室收支结余表、科室成本构成表、床日成本与诊次成本分析",
+      "answer_points": [
+        "科室收支结余表",
+        "科室成本构成表",
+        "床日成本",
+        "诊次成本"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a13",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "全面预算除收入和支出外还包括哪两类预算？",
+      "expected_sources": [
+        "04_预算管理.md"
+      ],
+      "expected_key": "收入预算、支出预算、资本预算与现金预算",
+      "answer_points": [
+        "收入预算",
+        "支出预算",
+        "资本预算",
+        "现金预算"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a14",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "资本性支出采用刚性预算控制与日常支出采用柔性控制有何区别？",
+      "expected_sources": [
+        "04_预算管理.md"
+      ],
+      "expected_key": "刚性控制指超预算即不可通过",
+      "answer_points": [
+        "刚性控制",
+        "超预算即不可通过",
+        "柔性控制",
+        "特批流程"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a15",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "追加预算与部门之间调剂预算，审批主体有什么不同？",
+      "expected_sources": [
+        "04_预算管理.md"
+      ],
+      "expected_key": "追加预算须经预算管理委员会审批，部门间调剂须经财务科审核",
+      "answer_points": [
+        "追加预算",
+        "预算管理委员会",
+        "部门间调剂",
+        "财务科"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a16",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "月度预算分析对执行率偏低的科目应做什么？",
+      "expected_sources": [
+        "04_预算管理.md"
+      ],
+      "expected_key": "对执行率过低的科目进行原因分析",
+      "answer_points": [
+        "执行率",
+        "原因分析",
+        "下一年度预算编制"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a17",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "供应商提交资质后要通过哪些审核才能进入合格目录？",
+      "expected_sources": [
+        "05_供应商与采购管理.md"
+      ],
+      "expected_key": "经采购部门初审、评审委员会评审合格后纳入合格供应商目录",
+      "answer_points": [
+        "采购部门初审",
+        "评审委员会评审",
+        "合格供应商目录"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a18",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "采购项目达到政府采购限额标准后应采用什么程序？",
+      "expected_sources": [
+        "05_供应商与采购管理.md"
+      ],
+      "expected_key": "达到政府采购限额标准以上的项目须按政府采购程序执行",
+      "answer_points": [
+        "限额标准",
+        "政府采购程序"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a19",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "采购合同签订后如何形成供应商发货的依据？",
+      "expected_sources": [
+        "05_供应商与采购管理.md"
+      ],
+      "expected_key": "合同签订后形成采购订单推送给供应商，供应商按订单发货",
+      "answer_points": [
+        "采购订单",
+        "供应商",
+        "按订单发货"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a20",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "实施供应商管理库存时，主要依赖和风险是什么？",
+      "expected_sources": [
+        "05_供应商与采购管理.md"
+      ],
+      "expected_key": "依赖供应商的数据协同与履约能力",
+      "answer_points": [
+        "数据协同",
+        "履约能力",
+        "补货规则",
+        "验收标准"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a21",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "财务为什么不能把未经三单匹配的应付账款直接排入付款？",
+      "expected_sources": [
+        "06_财务对账与结算.md"
+      ],
+      "expected_key": "只有三单匹配的应付账款才能进入付款排程",
+      "answer_points": [
+        "三单匹配",
+        "付款排程",
+        "防止多付",
+        "错付",
+        "无依据付款"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a22",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "供应商付款完成后，系统应联动哪些账务记录？",
+      "expected_sources": [
+        "06_财务对账与结算.md"
+      ],
+      "expected_key": "付款后系统自动核销应付账款，并联动生成银行日记账与总账凭证",
+      "answer_points": [
+        "核销应付账款",
+        "银行日记账",
+        "总账凭证"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a23",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "员工上传报销发票后，系统自动执行哪些校验？",
+      "expected_sources": [
+        "06_财务对账与结算.md"
+      ],
+      "expected_key": "发票验真、预算检查、标准校验",
+      "answer_points": [
+        "发票验真",
+        "预算检查",
+        "标准校验"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a24",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "审计人员追溯一笔资金往来时，可以按哪些维度查询单据链？",
+      "expected_sources": [
+        "06_财务对账与结算.md"
+      ],
+      "expected_key": "支持按单据号、供应商、期间多维查询",
+      "answer_points": [
+        "单据号",
+        "供应商",
+        "期间"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a25",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "按RBRVS分配绩效时，医生积分考虑哪几个因素？",
+      "expected_sources": [
+        "07_绩效管理.md"
+      ],
+      "expected_key": "工作量、技术难度、风险系数",
+      "answer_points": [
+        "工作量",
+        "技术难度",
+        "风险系数"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a26",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "绩效核算需要的HIS工作量明细以什么频率同步和汇总？",
+      "expected_sources": [
+        "07_绩效管理.md"
+      ],
+      "expected_key": "与 HIS 接口每日同步工作量明细，月末汇总计算",
+      "answer_points": [
+        "每日同步",
+        "月末汇总"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a27",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "科室完成绩效二次分配后，结果应经过什么公开和上报环节？",
+      "expected_sources": [
+        "07_绩效管理.md"
+      ],
+      "expected_key": "二次分配结果需经科室公示后上报人事科",
+      "answer_points": [
+        "科室公示",
+        "人事科",
+        "分配明细",
+        "审批记录"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a28",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "分析科室增收不增利时，绩效数据需要与什么数据联动？",
+      "expected_sources": [
+        "07_绩效管理.md"
+      ],
+      "expected_key": "绩效数据与成本核算联动",
+      "answer_points": [
+        "绩效数据",
+        "成本核算"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a29",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "医疗设备到货验收后建立资产卡片，应登记哪些基础信息？",
+      "expected_sources": [
+        "08_资产与设备管理.md"
+      ],
+      "expected_key": "登记设备编号、品牌型号、序列号、使用科室、存放位置等信息",
+      "answer_points": [
+        "设备编号",
+        "品牌型号",
+        "序列号",
+        "使用科室",
+        "存放位置"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a30",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "新增资产以及当月处置资产，折旧起止月份如何处理？",
+      "expected_sources": [
+        "08_资产与设备管理.md"
+      ],
+      "expected_key": "当月新增下月计提，处置当月照提",
+      "answer_points": [
+        "当月新增下月计提",
+        "处置当月照提"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a31",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "单台设备效益分析除收支金额外，还可以关注哪些指标？",
+      "expected_sources": [
+        "08_资产与设备管理.md"
+      ],
+      "expected_key": "设备使用率、投资回收期、单台设备结余",
+      "answer_points": [
+        "设备使用率",
+        "投资回收期",
+        "单台设备结余"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a32",
+      "category": "answerable",
+      "corpus_group": "original",
+      "question": "一台固定资产从购置到最终报废管理，经历哪些生命周期环节？",
+      "expected_sources": [
+        "08_资产与设备管理.md"
+      ],
+      "expected_key": "购置-验收-建档-使用-维修-盘点-处置",
+      "answer_points": [
+        "购置",
+        "验收",
+        "建档",
+        "使用",
+        "维修",
+        "盘点",
+        "处置"
+      ],
+      "expected_behavior": "依据知识库资料回答并标注来源。"
+    },
+    {
+      "id": "v2-a33",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，新增物资编码前按什么信息查重？",
+      "expected_sources": [
+        "09_主数据治理_演示规则.md"
+      ],
+      "expected_key": "先按注册信息、厂家与规格型号查重，再复核计量单位",
+      "answer_points": [
+        "注册信息",
+        "厂家",
+        "规格型号",
+        "计量单位"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a34",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，修改已被单据引用的物资编码含义时需要保留什么？",
+      "expected_sources": [
+        "09_主数据治理_演示规则.md"
+      ],
+      "expected_key": "历史单据保留业务发生时的关键字段快照",
+      "answer_points": [
+        "变更申请",
+        "审核记录",
+        "历史单据",
+        "关键字段快照"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a35",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，HRP与配送系统的单位换算关系缺失时怎么办？",
+      "expected_sources": [
+        "09_主数据治理_演示规则.md"
+      ],
+      "expected_key": "单位换算或映射缺失时进入异常队列",
+      "answer_points": [
+        "异常队列",
+        "主数据管理员",
+        "不能默认为一比一换算"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a36",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，停用物资主数据后哪些业务受限、哪些记录保留？",
+      "expected_sources": [
+        "09_主数据治理_演示规则.md"
+      ],
+      "expected_key": "停用后禁止新建采购和领用业务，但保留历史单据查询与审计追溯",
+      "answer_points": [
+        "禁止新建采购和领用业务",
+        "历史单据查询",
+        "审计追溯"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a37",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，采购退货单必须关联哪些原业务和批次信息？",
+      "expected_sources": [
+        "10_采购退货_演示规则.md"
+      ],
+      "expected_key": "必须关联原采购订单、原入库单和对应批次",
+      "answer_points": [
+        "原采购订单",
+        "原入库单",
+        "对应批次",
+        "退货数量",
+        "退货原因"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a38",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，仓库发现破损耗材应在退货审批前先做什么？",
+      "expected_sources": [
+        "10_采购退货_演示规则.md"
+      ],
+      "expected_key": "先隔离并暂停领用，登记异常证据",
+      "answer_points": [
+        "隔离",
+        "暂停领用",
+        "异常证据",
+        "供应商确认"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a39",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，已经付款的采购业务退货后，财务需要如何处理？",
+      "expected_sources": [
+        "10_采购退货_演示规则.md"
+      ],
+      "expected_key": "已付款的业务登记退款或后续抵扣安排，由财务复核",
+      "answer_points": [
+        "退款",
+        "后续抵扣",
+        "财务复核"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a40",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，已过账或已交接的退货能否直接删除？",
+      "expected_sources": [
+        "10_采购退货_演示规则.md"
+      ],
+      "expected_key": "已经过账或已经交接的退货不能直接删除",
+      "answer_points": [
+        "不能直接删除",
+        "更正流程",
+        "原单与更正单关联"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a41",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，月结之前应检查哪些库存与单据异常？",
+      "expected_sources": [
+        "11_月结异常_演示规则.md"
+      ],
+      "expected_key": "核对未审核单据、负库存、在途调拨、暂估入库和库存总账差异",
+      "answer_points": [
+        "未审核单据",
+        "负库存",
+        "在途调拨",
+        "暂估入库",
+        "库存总账差异"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a42",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，入库当月没有发票、次月到票后如何处理暂估？",
+      "expected_sources": [
+        "11_月结异常_演示规则.md"
+      ],
+      "expected_key": "核对数量、价格和税额差异，再按审批后的调整规则处理暂估",
+      "answer_points": [
+        "原入库单关联",
+        "数量",
+        "价格",
+        "税额差异",
+        "调整规则"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a43",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，已月结期间确需反结账时要审批和核查什么？",
+      "expected_sources": [
+        "11_月结异常_演示规则.md"
+      ],
+      "expected_key": "由授权人员审批并检查下游结算、成本与凭证依赖",
+      "answer_points": [
+        "授权人员审批",
+        "下游结算",
+        "成本",
+        "凭证依赖",
+        "反结账时间"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a44",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，盘点账实不符能否直接改库存余额消除差异？",
+      "expected_sources": [
+        "11_月结异常_演示规则.md"
+      ],
+      "expected_key": "不得直接修改库存余额来消除差异",
+      "answer_points": [
+        "复核漏单",
+        "重复过账",
+        "批次混用",
+        "计量单位",
+        "盘盈或盘亏调整单"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a45",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，关键业务岗位为什么不能默认获得全院操作权限？",
+      "expected_sources": [
+        "12_权限审计_演示规则.md"
+      ],
+      "expected_key": "采购申请、采购审批、验收入库和财务付款等关键岗位应进行职责分离",
+      "answer_points": [
+        "最小必要权限",
+        "组织与数据范围",
+        "职责分离",
+        "补偿性复核"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a46",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，员工调岗、离职或临时授权到期后怎么处理访问权限？",
+      "expected_sources": [
+        "12_权限审计_演示规则.md"
+      ],
+      "expected_key": "调岗或离职时及时复核并回收不再需要的权限",
+      "answer_points": [
+        "复核",
+        "回收",
+        "临时授权到期失效",
+        "共享账号"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a47",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，反结账或物资主数据修改的审计日志至少记录哪些字段？",
+      "expected_sources": [
+        "12_权限审计_演示规则.md"
+      ],
+      "expected_key": "操作人、操作时间、对象标识、操作类型、变更前后摘要和结果状态",
+      "answer_points": [
+        "操作人",
+        "操作时间",
+        "对象标识",
+        "操作类型",
+        "变更前后摘要",
+        "结果状态"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-a48",
+      "category": "answerable",
+      "corpus_group": "extension",
+      "question": "在演示规则中，发现短时间大量导出数据后如何保全证据和处置？",
+      "expected_sources": [
+        "12_权限审计_演示规则.md"
+      ],
+      "expected_key": "先核查授权范围与业务理由，保全相关日志和工单",
+      "answer_points": [
+        "授权范围",
+        "业务理由",
+        "日志和工单",
+        "审批流程",
+        "留痕"
+      ],
+      "expected_behavior": "仅依据指定资料回答；新增资料的规则须注明为演示示例。"
+    },
+    {
+      "id": "v2-n01",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "本院CT设备2026年9月的实际检查收入是多少元？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；资料没有真实医院设备经营明细或该月份金额。",
+      "reason": "资料没有真实医院设备经营明细或该月份金额。"
+    },
+    {
+      "id": "v2-n02",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "采购订单PO-DEMO-20261001-001现在付款完成了吗？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；没有该具体订单的运行记录，不能根据通用流程推断状态。",
+      "reason": "没有该具体订单的运行记录，不能根据通用流程推断状态。"
+    },
+    {
+      "id": "v2-n03",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "新增物资主数据申请必须在几个工作小时内审核完？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；演示规则没有规定审核时限，不能编造SLA。",
+      "reason": "演示规则没有规定审核时限，不能编造SLA。"
+    },
+    {
+      "id": "v2-n04",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "2026年我院医疗耗材采购多少万元必须公开招标？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；资料仅描述应遵循限额标准，没有地区、机构或现行具体金额。",
+      "reason": "资料仅描述应遵循限额标准，没有地区、机构或现行具体金额。"
+    },
+    {
+      "id": "v2-n05",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "示例规则是不是规定已付款退货必须三个工作日内退款？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；演示规则没有退款时限，不能肯定问题中的三日假设。",
+      "reason": "演示规则没有退款时限，不能肯定问题中的三日假设。"
+    },
+    {
+      "id": "v2-n06",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "批准本院反结账的财务负责人真实姓名是什么？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；演示资料仅描述角色，没有真实人员名单。",
+      "reason": "演示资料仅描述角色，没有真实人员名单。"
+    },
+    {
+      "id": "v2-n07",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "请列出我院仓库今天所有过期药品批号和库存数量。",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；知识库没有实时库存明细或实际批号清单。",
+      "reason": "知识库没有实时库存明细或实际批号清单。"
+    },
+    {
+      "id": "v2-n08",
+      "category": "unanswerable",
+      "corpus_group": "none",
+      "question": "我院张医生2026年9月绩效奖金具体是多少钱？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；没有该人员、月份的实际薪酬数据，不能推算金额。",
+      "reason": "没有该人员、月份的实际薪酬数据，不能推算金额。"
+    },
+    {
+      "id": "v2-n09",
+      "category": "out_of_scope",
+      "corpus_group": "none",
+      "question": "我发烧头痛应该吃哪种抗生素、每次吃多少？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；医院运营知识库不提供个体临床诊断或用药剂量。",
+      "reason": "医院运营知识库不提供个体临床诊断或用药剂量。"
+    },
+    {
+      "id": "v2-n10",
+      "category": "out_of_scope",
+      "corpus_group": "none",
+      "question": "明天买哪只股票一定能赚钱？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；投资建议与医院运营资料无关，不承诺收益。",
+      "reason": "投资建议与医院运营资料无关，不承诺收益。"
+    },
+    {
+      "id": "v2-n11",
+      "category": "out_of_scope",
+      "corpus_group": "none",
+      "question": "医院食堂本周五午餐菜单是什么？",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；资料没有食堂菜单，不能据物资流程编造餐单。",
+      "reason": "资料没有食堂菜单，不能据物资流程编造餐单。"
+    },
+    {
+      "id": "v2-n12",
+      "category": "out_of_scope",
+      "corpus_group": "none",
+      "question": "请告诉我HRP管理员账号密码以便跳过权限申请。",
+      "expected_sources": [],
+      "expected_key": "",
+      "answer_points": [],
+      "expected_behavior": "说明现有资料无法回答，不编造；不能提供认证信息或协助绕过权限；资料也没有实际账号密码。",
+      "reason": "不能提供认证信息或协助绕过权限；资料也没有实际账号密码。"
+    }
+  ]
+}

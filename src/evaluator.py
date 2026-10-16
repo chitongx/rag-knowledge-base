@@ -22,8 +22,8 @@ from .config import EVAL_DIR
 from .retrieval import retrieve
 
 
-def _load_tests() -> list[dict]:
-    path = EVAL_DIR / "test_questions.json"
+def _load_tests(path: Path | None = None) -> list[dict]:
+    path = path or EVAL_DIR / "test_questions.json"
     data = json.loads(path.read_text(encoding="utf-8"))
     return data["questions"]
 
@@ -64,7 +64,7 @@ def ndcg_at_k(docs, q: dict, k: int, total_relevant: int) -> float:
     return dcg / ideal if ideal else 0.0
 
 
-def _experiment_metadata(k: int, chunk_count: int) -> dict:
+def _experiment_metadata(k: int, chunk_count: int, questions_path: Path | None = None) -> dict:
     """记录公开模型、配置与版本；不读取或保存认证配置。"""
     import hashlib
     import platform
@@ -81,7 +81,7 @@ def _experiment_metadata(k: int, chunk_count: int) -> dict:
         except PackageNotFoundError:
             packages[name] = None
     files = sorted(config.DOCS_DIR.glob("*")) + sorted((config.BASE_DIR / "src").glob("*.py"))
-    files += [EVAL_DIR / "test_questions.json", config.BASE_DIR / "requirements.txt"]
+    files += [questions_path or EVAL_DIR / "test_questions.json", config.BASE_DIR / "requirements.txt", config.BASE_DIR / "scripts/build_index.py"]
     return {
         "created_at": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(),
@@ -93,7 +93,7 @@ def _experiment_metadata(k: int, chunk_count: int) -> dict:
         "config": {name: getattr(config, name) for name in (
             "CHUNK_SIZE", "CHUNK_OVERLAP", "CHUNK_SEPARATORS", "QUERY_INSTRUCTION",
             "VECTOR_TOP_K", "BM25_TOP_K", "RRF_K", "HYBRID_FINAL_K", "RERANK_FINAL_K")},
-        "sha256": {str(p.relative_to(config.BASE_DIR)): hashlib.sha256(p.read_bytes()).hexdigest()
+        "sha256": {str(p.relative_to(config.BASE_DIR) if p.is_relative_to(config.BASE_DIR) else p): hashlib.sha256(p.read_bytes()).hexdigest()
                    for p in files if p.is_file()},
         "relevance": "expected_sources + expected_key substring; binary chunk-level labels",
         "ndcg_discount": "1/log2(rank+1), IDCG from full-corpus relevant chunk count",
@@ -101,20 +101,35 @@ def _experiment_metadata(k: int, chunk_count: int) -> dict:
 
 
 # ---------------- 实验 ----------------
-def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hybrid_rerank")) -> dict:
+def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hybrid_rerank"),
+                   *, questions_path: Path | None = None) -> dict:
     import time
     from .retrieval import load_index
 
     started = time.perf_counter()
-    tests = _load_tests()
+    questions_path = (questions_path or EVAL_DIR / "test_questions.json").resolve()
+    dataset = json.loads(questions_path.read_text(encoding="utf-8"))
+    tests = dataset["questions"]
+    categories = ("answerable", "unanswerable", "out_of_scope")
+    counts = {category: sum(q.get("category", "answerable") == category for q in tests) for category in categories}
+    if not counts["answerable"]:
+        raise ValueError("评估集至少需要一个可回答问题")
+    for q in tests:
+        category = q.get("category", "answerable")
+        if category not in categories:
+            raise ValueError(f"未知问题分类：{category}")
+        if category != "answerable" and (q.get("expected_key") or q.get("expected_sources")):
+            raise ValueError("无答案或越界问题不能标注相关答案片段")
     store, _ = load_index()
     results = {m: {"hit": [], "recall": [], "mrr": [], "ndcg": []} for m in modes}
     per_question = []
+    negative_counts = {m: 0 for m in modes}
 
     for q in tests:
         question = q["question"]
+        category = q.get("category", "answerable")
         relevant_chunks = [c for c in store.chunks if _relevant(c, q)]
-        if not relevant_chunks:
+        if category == "answerable" and not relevant_chunks:
             raise ValueError(f"评估标注未命中任何语料分块：{question}")
         detail = {
             "question": question,
@@ -124,8 +139,17 @@ def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hy
             "relevant_chunk_count": len(relevant_chunks),
             "modes": {},
         }
+        if "category" in q:
+            detail.update({name: q.get(name) for name in ("id", "category", "corpus_group", "answer_points", "expected_behavior")})
         for m in modes:
             docs = retrieve(question, mode=m, top_k=k)
+            if category != "answerable":
+                negative_counts[m] += bool(docs)
+                detail["modes"][m] = {
+                    "returned_candidates": len(docs),
+                    "retrieved": [{**d.__dict__, "relevant": False} for d in docs],
+                }
+                continue
             r = results[m]
             r["hit"].append(hit_at_k(docs, q, k))
             r["recall"].append(recall_at_k(docs, q, k, len(relevant_chunks)))
@@ -137,6 +161,7 @@ def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hy
                 "retrieved": [{**d.__dict__, "relevant": _relevant(d, q)} for d in docs],
             }
         per_question.append(detail)
+        print(f"[{len(per_question)}/{len(tests)}] {category}: {question}", flush=True)
 
     summary = {}
     for m, r in results.items():
@@ -160,7 +185,22 @@ def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hy
         for m in modes[1:]
     }
     summary["_per_question"] = per_question
-    summary["_metadata"] = _experiment_metadata(k, len(store.chunks))
+    summary["_metadata"] = _experiment_metadata(k, len(store.chunks), questions_path)
+    if "version" in dataset:
+        metadata = summary["_metadata"]
+        metadata["dataset_version"] = dataset["version"]
+        metadata["provenance"] = dataset.get("provenance", {})
+        metadata["classification_counts"] = counts
+        metadata["answerable_metric_denominator"] = counts["answerable"]
+        metadata["corpus"] = dataset.get("corpus", {})
+        metadata["historical_reference"] = dataset.get("historical_reference", {})
+        metadata["generation_evaluated"] = False
+        metadata["question_file"] = str(questions_path.relative_to(EVAL_DIR.parent) if questions_path.is_relative_to(EVAL_DIR.parent) else questions_path)
+        summary["_unanswerable"] = {
+            "samples": counts["unanswerable"] + counts["out_of_scope"],
+            "interpretation": "仅记录无答案/越界题的检索候选返回；不计入可回答题的Hit/Recall/MRR/NDCG，不代表模型拒答结果。",
+            "modes": {m: {"queries_returning_candidates": negative_counts[m], "rejection_accuracy": None} for m in modes},
+        }
     summary["_metadata"]["elapsed_seconds"] = round(time.perf_counter() - started, 3)
     return summary
 
@@ -168,15 +208,25 @@ def run_experiment(k: int = 5, modes: tuple[str, ...] = ("vector", "hybrid", "hy
 def _pct(base: float, cur: float) -> str:
     if base <= 0:
         return "n/a"
-    return f"+{(cur - base) / base * 100:.1f}%"
+    return f"{(cur - base) / base * 100:+.1f}%"
 
 
-def main():
-    import sys
-    k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-    n = len(_load_tests())
+def main(argv: list[str] | None = None):
+    import argparse
+    parser = argparse.ArgumentParser(description="检索评估；无答案题单列，不计入有答案指标分母")
+    parser.add_argument("k", nargs="?", type=int, default=5)
+    parser.add_argument("--questions", type=Path, default=EVAL_DIR / "test_questions.json")
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args(argv)
+    legacy_questions = (EVAL_DIR / "test_questions.json").resolve()
+    is_versioned = args.questions.resolve() != legacy_questions
+    out = args.output or EVAL_DIR / ("eval_result_v2.json" if is_versioned else "eval_result.json")
+    if is_versioned and out.resolve() == (EVAL_DIR / "eval_result.json").resolve():
+        parser.error("新版题集不能覆盖28题历史结果，请使用独立输出文件")
+    k = args.k
+    n = len(_load_tests(args.questions))
     print(f"=== 检索评估实验（top-k={k}，共 {n} 个问题，chunk 级判定） ===\n")
-    summary = run_experiment(k=k)
+    summary = run_experiment(k=k, questions_path=args.questions)
     header = ["模式", "Hit@%d" % k, "Recall@%d" % k, "MRR", "NDCG@%d" % k]
     print(f"{header[0]:<16}{header[1]:>10}{header[2]:>12}{header[3]:>10}{header[4]:>12}")
     print("-" * 62)
@@ -191,7 +241,6 @@ def main():
     for m, imp in summary.get("_improvement_vs_baseline", {}).items():
         print(f"  {m}: Hit@{k} {imp['Hit@%d' % k]}, MRR {imp['MRR']}, NDCG@{k} {imp['NDCG@%d' % k]}")
 
-    out = EVAL_DIR / "eval_result.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n结果已保存: {out}")
 
