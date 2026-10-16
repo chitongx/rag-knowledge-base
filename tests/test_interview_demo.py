@@ -78,6 +78,25 @@ def test_historical_comparison_uses_recorded_full_sources_without_live_retrieval
         assert len(app.get("download_button")) == 1
 
 
+def test_expanded_record_separates_answerable_metrics_from_negative_candidates():
+    import json
+    record = json.loads((Path(__file__).resolve().parents[1] / "eval_data" / "eval_result_v2.json").read_text())
+    negative = next(row for row in record["_per_question"] if row["category"] == "unanswerable")
+    with demo_app() as (app, retrieve):
+        app.run()
+        app.radio[0].set_value("历史评估回放").run()
+        assert any(item.key == "evaluation_version" for item in app.selectbox), "Expanded evidence must be selectable"
+        app.selectbox(key="evaluation_version").set_value("扩展60题（12篇资料）").run()
+        app.selectbox(key="recorded_question").set_value(negative["question"]).run()
+        assert not app.exception
+        retrieve.assert_not_called()
+        captions = "\n".join(item.value for item in app.caption)
+        assert "48 个可回答问题" in captions and "12 个无答案或越界问题" in captions
+        assert not app.metric, "Negative candidates cannot receive answerable ranking metrics"
+        assert any("未验收生成拒答" in item.value for item in app.warning)
+        assert any("扩展评估" in item.value for item in app.markdown)
+
+
 def test_generation_failure_retains_sources_and_does_not_report_completed_answer():
     def interrupted(*args, **kwargs):
         yield {"type": "token", "data": "未完成的回答"}

@@ -8,6 +8,7 @@ RetrievedDoc 携带 source/heading，供前端展示"引用来源"（面试要�
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 from .config import HYBRID_FINAL_K, INDEX_DIR, RERANK_FINAL_K
@@ -27,12 +28,18 @@ class RetrievedDoc:
 
 
 def load_index() -> tuple[FAISSVectorStore, BM25Index]:
+    from scripts.build_index import document_fingerprints, main as build_main
+
     faiss_path = INDEX_DIR / "faiss"
     bm25_path = INDEX_DIR / "bm25"
-    # 云端（Streamlit Cloud）无持久磁盘，索引二进制不入库；启动时检测到缺失则自动从 data/docs 重建
-    if not (faiss_path / "index.bin").exists() or not (bm25_path / "bm25.pkl").exists():
-        print("[auto-build] 索引不存在，开始从 data/docs/ 自动重建（首次会下载 embedding 模型）...")
-        from scripts.build_index import main as build_main
+    try:
+        indexed_documents = json.loads((INDEX_DIR / "documents.sha256.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        indexed_documents = None
+    # 索引保留在云端缓存时，也要检测文档新增、修改和删除。
+    if (not (faiss_path / "index.bin").exists() or not (bm25_path / "bm25.pkl").exists()
+            or indexed_documents != document_fingerprints()):
+        print("[auto-build] 索引缺失或文档已变化，开始从 data/docs/ 自动重建（首次会下载 embedding 模型）...")
         build_main()
     store = FAISSVectorStore.load(faiss_path)
     bm25 = BM25Index.load(bm25_path)

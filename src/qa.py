@@ -38,6 +38,15 @@ def _format_context(docs: list[RetrievedDoc]) -> str:
     return "\n\n".join(parts)
 
 
+def _check_completion(message):
+    reason = message.response_metadata.get("finish_reason")
+    if reason == "length":
+        raise ValueError("回答达到生成上限，内容可能不完整。")
+    if reason is not None and reason != "stop":
+        raise ValueError("模型未正常完成，回答可能不完整。")
+    return reason == "stop"
+
+
 def answer_question(query: str, mode: str = "hybrid_rerank",
                     top_k: int = 5) -> dict:
     """返回 {question, answer, sources:[{source,heading,text}]}。"""
@@ -52,11 +61,14 @@ def answer_question(query: str, mode: str = "hybrid_rerank",
     prompt = ChatPromptTemplate.from_messages(
         [("system", SYSTEM_PROMPT), ("human", "问题：{question}")]
     )
-    chain = prompt | llm | StrOutputParser()
-    answer = chain.invoke({
+    chain = prompt | llm
+    message = chain.invoke({
         "context": _format_context(docs),
         "question": query,
     })
+    if not _check_completion(message):
+        raise ValueError("未收到模型完成状态，回答可能不完整。")
+    answer = StrOutputParser().invoke(message)
 
     return {
         "question": query,
@@ -88,9 +100,13 @@ def stream_answer(query: str, mode: str = "hybrid_rerank", top_k: int = 5,
         [("system", SYSTEM_PROMPT), ("human", "问题：{question}")]
     )
     chain = prompt | llm
+    completed = False
     for chunk in chain.stream({
         "context": _format_context(docs),
         "question": query,
     }):
         if chunk.content:
             yield {"type": "token", "data": chunk.content}
+        completed = _check_completion(chunk) or completed
+    if not completed:
+        raise ValueError("未收到模型完成状态，回答可能不完整。")

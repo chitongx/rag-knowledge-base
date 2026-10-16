@@ -21,10 +21,12 @@ from src.qa import stream_answer
 st.set_page_config(page_title="HRP 知识库问答 · RAG 演示", page_icon="🏥", layout="centered")
 
 st.title("🏥 HRP 医院运营知识库问答")
-st.caption("8 篇医院运营示例文档 · 三种检索模式 · 原文来源可追溯")
+project_dir = Path(__file__).resolve().parent
+document_count = len(list((project_dir / "data" / "docs").glob("*.md")))
+st.caption(f"{document_count} 篇医院运营示例文档 · 三种检索模式 · 原文来源可追溯")
 
 MODE_LABELS = {"vector": "纯向量", "hybrid": "混合检索", "hybrid_rerank": "混合检索 + 精排"}
-result_path = Path(__file__).resolve().parent / "eval_data" / "eval_result.json"
+result_path = project_dir / "eval_data" / "eval_result.json"
 results = json.loads(result_path.read_text(encoding="utf-8")) if result_path.exists() else None
 demo_type = st.radio("演示方式", ["实时检索", "历史评估回放"], horizontal=True)
 
@@ -99,6 +101,12 @@ if demo_type == "实时检索":
                 st.error("生成未完成，已显示的文字可能不完整。原文来源仍可核对；可关闭生成后重新提问。")
 else:
     st.info("历史评估回放：展示已保存的真实检索记录，不调用模型，不是本次实时检索或生成回答。")
+    expanded_path = project_dir / "eval_data" / "eval_result_v2.json"
+    if expanded_path.exists():
+        version = st.selectbox("评估记录", ["原始28题（8篇资料）", "扩展60题（12篇资料）"], key="evaluation_version")
+        if version == "扩展60题（12篇资料）":
+            result_path = expanded_path
+            results = json.loads(result_path.read_text(encoding="utf-8"))
     if results:
         records = results["_per_question"]
         question = st.selectbox("回放问题", [r["question"] for r in records], key="recorded_question",
@@ -106,11 +114,17 @@ else:
         record = next(r for r in records if r["question"] == question)
         st.caption(f"记录日期：{results['_metadata']['created_at'][:10]} · 对同一个问题比较三种模式的 Top 5。")
         st.caption("相关片段由来源文档与标注原文共同判定；排名越靠前，倒数排名越高。不同模式的原始分数不可直接比较。")
+        if record.get("category", "answerable") != "answerable":
+            st.warning("本题为无答案或越界问题，仅回放检索候选；未验收生成拒答。")
+            st.caption(record["expected_behavior"])
         for column, (mode, label) in zip(st.columns(3), MODE_LABELS.items()):
             with column:
                 st.markdown(f"**{label}**")
                 mode_result = record["modes"][mode]
-                st.metric("本题倒数排名", f"{mode_result['mrr']:.2f}")
+                if "mrr" in mode_result:
+                    st.metric("本题倒数排名", f"{mode_result['mrr']:.2f}")
+                else:
+                    st.caption(f"返回 {mode_result['returned_candidates']} 个候选，不代表资料能够回答本题。")
                 for i, doc in enumerate(mode_result["retrieved"], 1):
                     state = "相关" if doc["relevant"] else "未匹配标注"
                     with st.expander(f"[{i}] {doc['heading'] or '正文'} · {state}"):
@@ -121,12 +135,22 @@ else:
 
 st.divider()
 if results:
-    st.markdown("#### 28 题历史评估")
-    st.caption("关键词与来源共同判定相关分块；样本只覆盖有答案问题，不代表全量业务表现、生成准确率或无答案拒答能力。")
+    expanded = results["_metadata"].get("dataset_version")
+    if expanded:
+        counts = results["_metadata"]["classification_counts"]
+        negative_count = counts["unanswerable"] + counts["out_of_scope"]
+        corpus_count = sum(len(files) for files in results["_metadata"]["corpus"].values())
+        chunk_count = results["_metadata"]["chunk_count"]
+        st.markdown("#### 扩展评估 v2")
+        st.caption(f"以下指标仅使用 {counts['answerable']} 个可回答问题；另有 {negative_count} 个无答案或越界问题，只保存候选记录，不计入指标分母。")
+        st.caption(f"本次使用 {corpus_count} 篇资料、{chunk_count} 个片段。新增规则和题目由项目协作编写，非真实医院制度、非第三方盲测；尚未评估生成质量和拒答。不能与旧28题分数直接比较改进幅度。")
+    else:
+        st.markdown("#### 28 题历史评估")
+        st.caption("原始8篇资料的历史记录；当前实时检索使用扩展语料。关键词与来源共同判定相关分块，不代表生成准确率或无答案拒答能力。")
     st.dataframe([{"检索模式": MODE_LABELS[m], **results[m]} for m in MODE_LABELS], hide_index=True)
     with st.expander("指标含义与复现信息"):
         st.markdown("Hit@5：前五个片段是否命中；MRR：首个相关片段的倒数排名均值；NDCG@5：前五个片段的排序质量。")
         st.json(results["_metadata"])
-    st.download_button("下载完整评估记录", result_path.read_bytes(), file_name="rag-evaluation.json", mime="application/json")
+    st.download_button("下载完整评估记录", result_path.read_bytes(), file_name="rag-evaluation-v2.json" if expanded else "rag-evaluation.json", mime="application/json")
 else:
     st.caption("离线评估：运行 python -m scripts.evaluate 5 后生成三种模式的真实结果。")

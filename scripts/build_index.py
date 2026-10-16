@@ -3,6 +3,8 @@
 用法：python -m scripts.build_index
 输出：data/index/{faiss,bm25}
 """
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -15,12 +17,19 @@ from src.ingestion import chunk_document
 from src.vector_store import FAISSVectorStore
 
 
+def document_fingerprints() -> dict[str, str]:
+    return {
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(DOCS_DIR.glob("*"))
+        if p.is_file() and p.suffix.lower() in (".pdf", ".docx", ".txt", ".md", ".markdown")
+    }
+
+
 def main():
-    docs = sorted(DOCS_DIR.glob("*"))
-    docs = [p for p in docs if p.suffix.lower() in (".pdf", ".docx", ".txt", ".md", ".markdown")]
+    fingerprints = document_fingerprints()
+    docs = [DOCS_DIR / name for name in fingerprints]
     if not docs:
-        print(f"没有找到可解析的文档，请先放文件到 {DOCS_DIR}")
-        return
+        raise ValueError(f"没有找到可解析的文档，请先放文件到 {DOCS_DIR}")
 
     all_chunks = []
     for path in docs:
@@ -41,6 +50,9 @@ def main():
     bm25 = BM25Index.from_chunks(all_chunks)
     store.save(INDEX_DIR / "faiss")
     bm25.save(INDEX_DIR / "bm25")
+    (INDEX_DIR / "documents.sha256.json").write_text(
+        json.dumps(fingerprints, ensure_ascii=False, indent=2) + "\n", encoding="utf-8",
+    )
     print(f"\n索引构建完成：向量 {len(store)} 条，BM25 {len(bm25.corpus)} 条 -> {INDEX_DIR}")
 
 
